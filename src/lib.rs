@@ -99,7 +99,6 @@ impl<'a, T> From<T> for MaybeOwned<'a, T> {
     }
 }
 
-
 impl<'a, T> Default for MaybeOwned<'a, T> where T: Default {
     fn default() -> Self {
         Owned(T::default())
@@ -230,4 +229,18 @@ mod tests {
         assert_eq!(data, maybe.into_owned());
     }
 
+
+    #[test]
+    fn has_default() {
+        #[derive(Default)]
+        struct TestType(u8);
+        let _x: MaybeOwned<TestType> = Default::default();
+    }
+
+    #[test]
+    fn has_clone() {
+        #[derive(Clone)]
+        struct TestType(u8);
+        let _x  = TestType(12).clone();
+    }
 }
