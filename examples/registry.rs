@@ -43,11 +43,11 @@ impl<'a> Regestry<'a> {
     fn print_me(&self) {
         for (key, val) in self.registry.iter() {
             println!(
-                "got: {} => {} [{}] @ {:?}",
+                "got: {:>6} => {:>11} {:<10} @ {:10.10?}",
                 //we can just deref MaybeOwned
                 key,
                 val.text,
-                if val.is_owned() { "owned" } else { "borrowed" },
+                if val.is_owned() { "[owned]" } else { "[borrowed]" },
                 val.time
             )
         }
