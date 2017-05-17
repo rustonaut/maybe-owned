@@ -17,14 +17,31 @@ use self::MaybeOwned::*;
 /// It provides `From<T>`, `From<&'a T>` implementations and, in difference
 /// to `Cow` does _not_ require `ToOwned` to be implemented which makes it
 /// compatible with non cloneable data, as a draw back of this it does not
-/// know that `&str` is the borrowed form of `String` and therefor you can
-/// not pass a `&str` as borrowed version (you would have to use `&String`).
+/// know about `ToOwned`. As a consequence of it can't know that `&str` should
+/// be the borrowed version of `String` and not `&String` this is especially
+/// bad wrt. `Box` as the borrowed version of `Box<T>` would be `&Box<T>`.
 ///
-/// The main benefit lies in the ability to write API functions which accept
+/// While this crate has some drawbacks compared to `Cow` is has the benefit,
+/// that it works with Types which neither implement `Clone` nor `ToOwned`.
+/// Another benefit lies in the ability to write API functions which accept
 /// a generic parameter `E: Into<MaybeOwned<'a, T>>` as the API consumer can
 /// pass `T`, `&'a T` and `MaybeOwned<'a, T>` as argument, without requiring
-/// a explicite `Cow::Onwed` or a split into two functions one accepting
+/// a explicit `Cow::Onwed` or a split into two functions one accepting
 /// owed and the other borrowed values.
+///
+/// # Alternatives
+///
+/// If you mainly have values implementing `ToOwned` like `&str`/`String`, `Path`/`PathBuf` or
+/// `&[T]`/`Vec<T>` using `std::borrow::Cow` might be preferable.
+///
+/// If you want to be able to treat `&T`, `&mut T`, `Box<T>` and `Arc<T>` the same
+/// consider using [`reffers::rbma::RBMA`](https://docs.rs/reffers)
+/// (through not all types/platforms are supported because
+/// as it relies on the fact that for many pointers the lowest two bits are 0, and stores
+/// the discriminant in them, nevertheless this is can only be used with 32bit-aligned data,
+/// e.g. using a &u8 _might_ fail). RBMA also allows you to recover a `&mut T` if it was created
+/// from `Box<T>`, `&mut T` or a unique `Arc`.
+///
 ///
 /// # Examples
 ///
