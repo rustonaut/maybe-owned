@@ -1,6 +1,6 @@
 extern crate maybe_owned;
 
-use std::borrow::Borrow;
+use maybe_owned::MaybeOwned;
 use std::collections::HashMap;
 use std::time::SystemTime;
 
@@ -15,8 +15,10 @@ impl Data {
     fn new<T>(text: T) -> Data
         where T: Into<String>
     {
-        let time = SystemTime::now();
-        Data { text, time }
+        Data {
+            text: text.into(),
+            time: SystemTime::now()
+        }
     }
 }
 
@@ -27,22 +29,26 @@ struct Regestry<'a> {
 
 impl<'a> Regestry<'a> {
 
-    fn new() -> Regestry {
+    fn new() -> Regestry<'a> {
         Default::default()
     }
 
     fn register_data<K,D>(&mut self, key: K, data: D)
+        -> Option<MaybeOwned<'a, Data>>
         where K: Into<String>, D: Into<MaybeOwned<'a, Data>>
     {
-        self.registry.insert(key.into(), data.into()'\)
+        self.registry.insert(key.into(), data.into())
     }
 
     fn print_me(&self) {
-        for (key, val) in self.registry {
+        for (key, val) in self.registry.iter() {
             println!(
-                "got: {} [{}]",
+                "got: {} => {} [{}] @ {:?}",
                 //we can just deref MaybeOwned
-                val.
+                key,
+                val.text,
+                if val.is_owned() { "owned" } else { "borrowed" },
+                val.time
             )
         }
     }
@@ -50,10 +56,11 @@ impl<'a> Regestry<'a> {
 
 
 fn main() {
-    let reg = Regestry::new();
-    reg.registry("tom", Data::new("abc"));
     let shared_data = Data::new("--missing--");
-    reg.registry("lucy", &shared_data);
-    reg.registry("peter", &shared_data);
+
+    let mut reg = Regestry::new();
+    reg.register_data("tom", Data::new("abc"));
+    reg.register_data("lucy", &shared_data);
+    reg.register_data("peter", &shared_data);
     reg.print_me();
 }

@@ -1,7 +1,7 @@
 
 # maybe-owned &emsp; [![Build Status](https://travis-ci.org/dathinab/maybe-owned.svg?branch=master)](https://travis-ci.org/dathinab/maybe-owned)
 
-**provides a `MaybeOwned<'a,T>` enum with `From<T>` and `From<&'a T>`, different to `Cow` it does not require `ToOwned`**
+**provides a `MaybeOwned<'a,T>` type different to std's `Cow` it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`**
 
 ---
 
@@ -17,13 +17,30 @@ Documentation can be [viewed on docs.rs](https://docs.rs/maybe-owned).
 
 ## Example
 
-The main benefit of `MaybeOwned` over `Cow` is for API design:
+Take a look at the [examples dir](./examples) and the documentation
+for more complete examples.
+
+The main benefit of `MaybeOwned` over `Cow` is for API design,
+allowing API consumer to pass in both `T` and `&'a T`:
 
 ```rust
 
-struct RegexRegestry {
-    
-}
+//... in a trait implementation
+    fn register<D>(&mut self, key: SomeId, data: D)
+        where D: Into<MaybeOwned<'a, Data>>
+    {
+        self.map.entry(key).or_insert_with(||data.into());
+    }
+//...
+
+//... in usage
+    // use owned data
+    registry.register(id1, data_owned);
+    // use a reference to the data
+    registry.register(id2, &data_ref);
+    // it ok to use the same reference again
+    registry.register(id3, &data_ref);
+//...
 ```
 
 
