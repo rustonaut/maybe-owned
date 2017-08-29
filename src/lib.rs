@@ -3,10 +3,10 @@
 //! Take a look at it's documentation for more information.
 //!
 #![warn(missing_docs)]
-use std::convert::From;
-use std::clone::Clone;
 use std::ops::Deref;
-use std::default::Default;
+use std::cmp::Ordering;
+use std::hash::{Hash, Hasher};
+use std::fmt;
 
 
 use self::MaybeOwned::*;
@@ -132,6 +132,54 @@ impl<'a, T> Clone for MaybeOwned<'a, T> where T: Clone {
     }
 }
 
+impl<'a, 'b, A, B> PartialEq<MaybeOwned<'b, B>> for MaybeOwned<'a, A>
+    where A: PartialEq<B>
+{
+    #[inline]
+    fn eq(&self, other: &MaybeOwned<'b, B>) -> bool {
+        PartialEq::eq(self.deref(), other.deref())
+    }
+}
+
+impl<'a, T> Eq for MaybeOwned<'a, T> where T: Eq {}
+
+impl<'a, T> PartialOrd for MaybeOwned<'a, T>
+    where T: PartialOrd
+{
+    #[inline]
+    fn partial_cmp(&self, other: &MaybeOwned<'a, T>) -> Option<Ordering> {
+        PartialOrd::partial_cmp(self.deref(), other.deref())
+    }
+}
+
+impl<'a, T> Ord for MaybeOwned<'a, T>
+    where T: Ord
+{
+    #[inline]
+    fn cmp(&self, other: &MaybeOwned<'a, T>) -> Ordering {
+        Ord::cmp(self.deref(), other.deref())
+    }
+}
+
+impl<'a, T> Hash for MaybeOwned<'a, T>
+    where T: Hash
+{
+    #[inline]
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        Hash::hash(self.deref(), state)
+    }
+}
+
+impl<'a, T> fmt::Display for MaybeOwned<'a, T>
+    where T: fmt::Display
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Owned(ref o) => fmt::Display::fmt(o, f),
+            Borrowed(b) => fmt::Display::fmt(b, f),
+        }
+    }
+}
 
 impl<'a, T> MaybeOwned<'a, T> where T: Clone {
 
@@ -259,5 +307,86 @@ mod tests {
         #[derive(Clone)]
         struct TestType(u8);
         let _x  = TestType(12).clone();
+    }
+
+    #[test]
+    fn has_partial_eq() {
+        #[derive(PartialEq)]
+        struct TestType(f32);
+
+        let n = TestType(33.0);
+        let a = MaybeOwned::Owned(TestType(42.0));
+        let b = MaybeOwned::Borrowed(&n);
+        let c = MaybeOwned::Owned(TestType(33.0));
+
+        assert_eq!(a == b, false);
+        assert_eq!(b == c, true);
+        assert_eq!(c == a, false);
+    }
+
+    #[test]
+    fn has_eq() {
+        #[derive(PartialEq, Eq)]
+        struct TestType(i32);
+
+        let n = TestType(33);
+        let a = MaybeOwned::Owned(TestType(42));
+        let b = MaybeOwned::Borrowed(&n);
+        let c = MaybeOwned::Owned(TestType(33));
+
+        assert_eq!(a == b, false);
+        assert_eq!(b == c, true);
+        assert_eq!(c == a, false);
+    }
+
+    #[test]
+    fn has_partial_ord() {
+        #[derive(PartialEq, PartialOrd)]
+        struct TestType(f32);
+
+        let n = TestType(33.0);
+        let a = MaybeOwned::Owned(TestType(42.0));
+        let b = MaybeOwned::Borrowed(&n);
+        let c = MaybeOwned::Owned(TestType(33.0));
+
+        assert_eq!(a > b, true);
+        assert_eq!(b > c, false);
+        assert_eq!(a < c, false);
+    }
+
+    #[test]
+    fn has_ord() {
+        #[derive(PartialEq, Eq, PartialOrd, Ord)]
+        struct TestType(i32);
+
+        let n = TestType(33);
+        let a = MaybeOwned::Owned(TestType(42));
+        let b = MaybeOwned::Borrowed(&n);
+        let c = MaybeOwned::Owned(TestType(33));
+
+        assert_eq!(a > b, true);
+        assert_eq!(b > c, false);
+        assert_eq!(a < c, false);
+    }
+
+    #[test]
+    fn has_hash() {
+        use std::collections::HashMap;
+
+        let mut map = HashMap::new();
+        map.insert(MaybeOwned::Owned(42), 33);
+
+        assert_eq!(map.get(&MaybeOwned::Borrowed(&42)), Some(&33));
+    }
+
+    #[test]
+    fn has_display() {
+        let n = 33;
+        let a = MaybeOwned::Owned(42);
+        let b = MaybeOwned::Borrowed(&n);
+
+        let s = format!("{} {}", a, b);
+
+        assert_eq!(s, "42 33");
     }
 }
