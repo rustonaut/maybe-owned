@@ -7,6 +7,7 @@ use std::ops::Deref;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::fmt;
+use std::borrow::Cow;
 
 
 use self::MaybeOwned::*;
@@ -113,6 +114,28 @@ impl<'a, T> From<&'a T> for MaybeOwned<'a, T> {
 impl<'a, T> From<T> for MaybeOwned<'a, T> {
     fn from(v: T) -> MaybeOwned<'a, T> {
         Owned(v)
+    }
+}
+
+impl<'a, T> From<Cow<'a, T>> for MaybeOwned<'a, T>
+    where T: ToOwned<Owned=T>,
+{
+    fn from(cow: Cow<'a, T>) -> MaybeOwned<'a, T> {
+        match cow {
+            Cow::Owned(v) => MaybeOwned::Owned(v),
+            Cow::Borrowed(v) => MaybeOwned::Borrowed(v),
+        }
+    }
+}
+
+impl<'a, T> Into<Cow<'a, T>> for MaybeOwned<'a, T>
+    where T: ToOwned<Owned=T>,
+{
+    fn into(self) -> Cow<'a, T> {
+        match self {
+            MaybeOwned::Owned(v) => Cow::Owned(v),
+            MaybeOwned::Borrowed(v) => Cow::Borrowed(v),
+        }
     }
 }
 
@@ -388,5 +411,27 @@ mod tests {
         let s = format!("{} {}", a, b);
 
         assert_eq!(s, "42 33");
+    }
+
+    #[test]
+    fn from_cow() {
+        use std::borrow::Cow;
+
+        fn test<'a, V: Into<MaybeOwned<'a, i32>>>(v: V, n: i32) { assert_eq!(*v.into(), n) }
+
+        let n = 33;
+        test(Cow::Owned(42), 42);
+        test(Cow::Borrowed(&n), n);
+    }
+
+    #[test]
+    fn into_cow() {
+        use std::borrow::Cow;
+
+        fn test<'a, V: Into<Cow<'a, i32>>>(v: V, n: i32) { assert_eq!(*v.into(), n) }
+
+        let n = 33;
+        test(MaybeOwned::Owned(42), 42);
+        test(MaybeOwned::Borrowed(&n), n);
     }
 }
