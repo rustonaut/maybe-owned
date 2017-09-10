@@ -8,6 +8,7 @@ use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::fmt;
 use std::borrow::{Cow, Borrow};
+use std::str::FromStr;
 
 
 use self::MaybeOwned::*;
@@ -213,6 +214,16 @@ impl<'a, T> fmt::Display for MaybeOwned<'a, T>
             Owned(ref o) => fmt::Display::fmt(o, f),
             Borrowed(b) => fmt::Display::fmt(b, f),
         }
+    }
+}
+
+impl<'a, T> FromStr for MaybeOwned<'a, T>
+    where T: FromStr
+{
+    type Err = T::Err;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(MaybeOwned::Owned(T::from_str(s)?))
     }
 }
 
@@ -445,6 +456,14 @@ mod tests {
         let n = 33;
         test(MaybeOwned::Owned(42), 42);
         test(MaybeOwned::Borrowed(&n), n);
+    }
+
+    #[test]
+    fn from_str() {
+        let as_string = "12";
+        //assumption as_string is convertable to u32
+        assert_eq!(12u32, as_string.parse().unwrap());
+        assert_eq!(MaybeOwned::Owned(12u32), as_string.parse().unwrap());
     }
 
     #[test]
