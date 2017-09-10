@@ -104,6 +104,12 @@ impl<'a, T> Deref for MaybeOwned<'a, T> {
     }
 }
 
+impl<'a, T> AsRef<T> for MaybeOwned<'a, T> {
+    fn as_ref(&self) -> &T {
+        self
+    }
+}
+
 impl<'a, T> From<&'a T> for MaybeOwned<'a, T> {
     fn from(v: &'a T) -> MaybeOwned<'a, T> {
         Borrowed(v)
@@ -433,5 +439,16 @@ mod tests {
         let n = 33;
         test(MaybeOwned::Owned(42), 42);
         test(MaybeOwned::Borrowed(&n), n);
+    }
+
+    #[test]
+    fn as_ref() {
+        let data  = TestType::default();
+        let maybe_owned = MaybeOwned::Borrowed(&data);
+        let _ref: &TestType = maybe_owned.as_ref();
+        assert_eq!(
+            &data as *const _ as usize, 
+            _ref as *const _ as usize
+        );
     }
 }
