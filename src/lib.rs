@@ -7,7 +7,7 @@ use std::ops::Deref;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
 use std::fmt;
-use std::borrow::Cow;
+use std::borrow::{Cow, Borrow};
 
 
 use self::MaybeOwned::*;
@@ -106,6 +106,12 @@ impl<'a, T> Deref for MaybeOwned<'a, T> {
 
 impl<'a, T> AsRef<T> for MaybeOwned<'a, T> {
     fn as_ref(&self) -> &T {
+        self
+    }
+}
+
+impl<'a, T> Borrow<T> for MaybeOwned<'a, T> {
+    fn borrow(&self) -> &T {
         self
     }
 }
@@ -446,6 +452,19 @@ mod tests {
         let data  = TestType::default();
         let maybe_owned = MaybeOwned::Borrowed(&data);
         let _ref: &TestType = maybe_owned.as_ref();
+        assert_eq!(
+            &data as *const _ as usize, 
+            _ref as *const _ as usize
+        );
+    }
+
+    #[test]
+    fn borrow() {
+        use std::borrow::Borrow;
+
+        let data = TestType::default();
+        let maybe_owned = MaybeOwned::Borrowed(&data);
+        let _ref: &TestType = maybe_owned.borrow();
         assert_eq!(
             &data as *const _ as usize, 
             _ref as *const _ as usize
