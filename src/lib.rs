@@ -3,6 +3,12 @@
 //! Take a look at it's documentation for more information.
 //!
 #![warn(missing_docs)]
+#[cfg(feature = "serde")]
+extern crate serde;
+
+#[cfg(feature = "serde")]
+mod serde_impls;
+
 use std::ops::Deref;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};

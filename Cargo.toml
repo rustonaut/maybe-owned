@@ -17,3 +17,6 @@ keywords = [
 
 [badges]
 travis-ci = { repository = "dathinab/maybe-owned", branch = "master" }
+
+[dependencies]
+serde = { version = "1", optional = true }
