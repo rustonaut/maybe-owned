@@ -20,3 +20,7 @@ travis-ci = { repository = "dathinab/maybe-owned", branch = "master" }
 
 [dependencies]
 serde = { version = "1", optional = true }
+
+[dev-dependencies]
+serde_json = "1"
+serde_derive = "1"

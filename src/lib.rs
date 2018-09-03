@@ -81,6 +81,34 @@ use self::MaybeOwned::*;
 /// // ok, MaybeOwned can do this (but can't do &str<->String as tread of)
 /// let _ = MaybeOwned::Owned(OpaqueFFI { ref1: 0 as *const u8 });
 /// ```
+///
+/// ```
+/// # #[macro_use]
+/// # extern crate serde_derive;
+/// # extern crate serde_json;
+/// # extern crate maybe_owned;
+/// # #[cfg(feature = "serde")]
+/// # fn main() {
+/// # use maybe_owned::MaybeOwned;
+/// use std::collections::HashMap;
+///
+/// #[derive(Serialize, Deserialize)]
+/// struct SerializedData<'a> {
+///     data: MaybeOwned<'a, HashMap<String, i32>>,
+/// }
+///
+/// let mut map = HashMap::new();
+/// map.insert("answer".to_owned(), 42);
+///
+/// // serializing can use borrowed data to avoid unnecessary copying
+/// let bytes = serde_json::to_vec(&SerializedData { data: (&map).into() }).unwrap();
+///
+/// // deserializing creates owned data
+/// let deserialized: SerializedData = serde_json::from_slice(&bytes).unwrap();
+/// assert_eq!(deserialized.data["answer"], 42);
+/// # }
+/// # #[cfg(not(feature = "serde"))] fn main() {}
+/// ```
 #[derive(Debug)]
 pub enum MaybeOwned<'a, T: 'a> {
     /// owns T
