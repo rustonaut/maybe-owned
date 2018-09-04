@@ -1,9 +1,10 @@
 [package]
 name = "maybe-owned"
-version = "0.3.0"
+version = "0.3.1"
 authors = [
 	"Philipp korber <philippkorber@gmail.com>",
-	"darkstalker <slayerbeast@gmail.com>"
+	"darkstalker <slayerbeast@gmail.com>",
+    "daboross <daboross@daboross.net>"
 ]
 description = "provides a `MaybeOwned<'a,T>` type different to std's `Cow` it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`"
 license = "MIT OR Apache-2.0"
