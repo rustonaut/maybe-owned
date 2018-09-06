@@ -1,5 +1,5 @@
 
-# maybe-owned &emsp; [![Build Status](https://travis-ci.org/dathinab/maybe-owned.svg?branch=master)](https://travis-ci.org/dathinab/maybe-owned)
+# maybe-owned &emsp; [![Build Status](https://travis-ci.org/rustonaut/maybe-owned.svg?branch=master)](https://travis-ci.org/rustonaut/maybe-owned)
 
 **provides a `MaybeOwned<'a,T>` type different to std's `Cow` it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`**
 
