@@ -7,7 +7,7 @@ authors = [
 ]
 description = "provides a `MaybeOwned<'a,T>` type different to std's `Cow` it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/dathinab/maybe-owned"
+repository = "https://github.com/rustonaut/maybe-owned"
 readme = "./README.md"
 categories = []
 keywords = [
@@ -16,7 +16,7 @@ keywords = [
 
 
 [badges]
-travis-ci = { repository = "dathinab/maybe-owned", branch = "master" }
+travis-ci = { repository = "rustonaut/maybe-owned", branch = "master" }
 
 [dependencies]
 serde = { version = "1", optional = true }
