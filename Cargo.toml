@@ -1,6 +1,6 @@
 [package]
 name = "maybe-owned"
-version = "0.3.1"
+version = "0.3.2"
 authors = [
 	"Philipp korber <philippkorber@gmail.com>",
 	"darkstalker <slayerbeast@gmail.com>",
@@ -17,7 +17,8 @@ keywords = [
 
 
 [badges]
-travis-ci = { repository = "rustonaut/maybe-owned", branch = "master" }
+travis-ci = { repository = "rustonaut/maybe-owned", branch = "0.3" }
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 serde = { version = "1", optional = true }

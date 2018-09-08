@@ -7,8 +7,8 @@
 
 This crate provides a `MaybeOwned<'a,T>` enum. Different to `std::borrow::Cow` it
 implements `From<T>` and `From<&'a T>` and does not require a `ToOwned` implementation.
-While this can be nice for API's mainly consuming T's not implementing `ToOwned` or implementing 
-`ToOwned` through `Clone` it also means it's borrowed version of `String` is 
+While this can be nice for API's mainly consuming T's not implementing `ToOwned` or implementing
+`ToOwned` through `Clone` it also means it's borrowed version of `String` is
 `&String` and not `&str` making it less performant for cases like `String` or `Vec`.
 
 
@@ -60,3 +60,12 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
+
+
+## Change Log
+
+- `v0.3.1`:
+  - added `serde` support
+
+- `v0.3.2`:
+  - added transitive `std::ops` implementations
