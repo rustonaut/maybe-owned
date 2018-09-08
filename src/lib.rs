@@ -9,6 +9,8 @@ extern crate serde;
 #[cfg(feature = "serde")]
 mod serde_impls;
 
+mod transitive_impl;
+
 use std::ops::Deref;
 use std::cmp::Ordering;
 use std::hash::{Hash, Hasher};
@@ -109,6 +111,38 @@ use self::MaybeOwned::*;
 /// # }
 /// # #[cfg(not(feature = "serde"))] fn main() {}
 /// ```
+///
+/// # Transitive `std::ops` implementations
+///
+/// There are transitive implementations for most operator in `std::ops`.
+///
+/// A Op between a `MaybeOwned<L>` and `MaybeOwned<R>` is implemented if:
+///
+/// - L impl the Op with R
+/// - L impl the Op with &R
+/// - &L impl the Op with R
+/// - &L impl the Op with &R
+/// - the `Output` of all aboves implementations is
+///   the same type
+///
+///
+/// The `Neg` (`-` prefix) op is implemented for `V` if:
+///
+/// - `V` impl `Neg`
+/// - `&V` impl `Neg`
+/// - both have the same `Output`
+///
+///
+/// The `Not` (`!` prefix) op is implemented for `V` if:
+///
+/// - `V` impl `Not`
+/// - `&V` impl `Not`
+/// - both have the same `Output`
+///
+/// Adding implementations for Ops which add a `MaybeOwned` to
+/// a non `MaybeOwned` value (like `MaybeOwned<T> + T`) requires
+/// far reaching specialization in rust and is therefore not done
+/// for now.
 #[derive(Debug)]
 pub enum MaybeOwned<'a, T: 'a> {
     /// owns T
@@ -506,7 +540,7 @@ mod tests {
         let maybe_owned = MaybeOwned::Borrowed(&data);
         let _ref: &TestType = maybe_owned.as_ref();
         assert_eq!(
-            &data as *const _ as usize, 
+            &data as *const _ as usize,
             _ref as *const _ as usize
         );
     }
@@ -519,7 +553,7 @@ mod tests {
         let maybe_owned = MaybeOwned::Borrowed(&data);
         let _ref: &TestType = maybe_owned.borrow();
         assert_eq!(
-            &data as *const _ as usize, 
+            &data as *const _ as usize,
             _ref as *const _ as usize
         );
     }
