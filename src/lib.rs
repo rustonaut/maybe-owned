@@ -357,6 +357,15 @@ impl<T> DerefMut for MaybeOwnedMut<'_, T> {
     }
 }
 
+impl<T> AsMut<T> for MaybeOwnedMut<'_, T> {
+    fn as_mut(&mut self) -> &mut T {
+        match self {
+            Self::Owned(v) => v,
+            Self::Borrowed(v) => v,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
