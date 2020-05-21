@@ -1,6 +1,6 @@
 use std::ops::*;
 
-use super::MaybeOwned;
+use super::{MaybeOwned, MaybeOwnedMut};
 
 macro_rules! impl_op {
     ($([$OP:ident : $op:ident, $OP_ASSIGN:ident : $op_assign: ident]),*) => ($(
@@ -21,6 +21,23 @@ macro_rules! impl_op {
             }
         }
 
+        impl<'min, L, R, OUT: 'min> $OP<MaybeOwnedMut<'min, R>> for MaybeOwnedMut<'min, L>
+            where L: $OP<R, Output=OUT> + $OP<&'min mut R, Output=OUT>,
+                &'min mut L: $OP<R, Output=OUT> + $OP<&'min mut R, Output=OUT>
+        {
+            type Output = OUT;
+
+            fn $op(self, rhs: MaybeOwnedMut<'min, R>) -> Self::Output {
+                use self::MaybeOwnedMut::*;
+                match (self, rhs) {
+                    (Owned(l), Owned(r)) => l.$op(r),
+                    (Owned(l), Borrowed(r)) => l.$op(r),
+                    (Borrowed(l), Owned(r)) => l.$op(r),
+                    (Borrowed(l), Borrowed(r)) => l.$op(r)
+                }
+            }
+        }
+
         impl<'min, L, R> $OP_ASSIGN<MaybeOwned<'min, R>> for MaybeOwned<'min, L>
             where L: Clone + $OP_ASSIGN<R> + $OP_ASSIGN<&'min R>
         {
@@ -30,6 +47,19 @@ macro_rules! impl_op {
                 match rhs {
                     Owned(r) => self.to_mut().$op_assign(r),
                     Borrowed(r) => self.to_mut().$op_assign(r)
+                }
+            }
+        }
+
+        impl<'min, L, R> $OP_ASSIGN<MaybeOwnedMut<'min, R>> for MaybeOwnedMut<'min, L>
+            where L: $OP_ASSIGN<R> + $OP_ASSIGN<&'min mut R>
+        {
+
+            fn $op_assign(&mut self, rhs: MaybeOwnedMut<'min, R>) {
+                use self::MaybeOwnedMut::*;
+                match rhs {
+                    Owned(r) => self.as_mut().$op_assign(r),
+                    Borrowed(r) => self.as_mut().$op_assign(r)
                 }
             }
         }
@@ -63,6 +93,21 @@ impl<'l, V, OUT> Neg for MaybeOwned<'l, V>
     }
 }
 
+impl<'l, V, OUT> Neg for MaybeOwnedMut<'l, V>
+    where V: Neg<Output=OUT>, &'l mut V: Neg<Output=OUT>
+{
+    type Output = OUT;
+
+    fn neg(self) -> Self::Output {
+        use self::MaybeOwnedMut::*;
+
+        match self {
+            Owned(s) => s.neg(),
+            Borrowed(s) => s.neg()
+        }
+    }
+}
+
 impl<'l, V, OUT> Not for MaybeOwned<'l, V>
     where V: Not<Output=OUT>, &'l V: Not<Output=OUT>
 {
@@ -70,6 +115,21 @@ impl<'l, V, OUT> Not for MaybeOwned<'l, V>
 
     fn not(self) -> Self::Output {
         use self::MaybeOwned::*;
+
+        match self {
+            Owned(s) => s.not(),
+            Borrowed(s) => s.not()
+        }
+    }
+}
+
+impl<'l, V, OUT> Not for MaybeOwnedMut<'l, V>
+    where V: Not<Output=OUT>, &'l mut V: Not<Output=OUT>
+{
+    type Output = V::Output;
+
+    fn not(self) -> Self::Output {
+        use self::MaybeOwnedMut::*;
 
         match self {
             Owned(s) => s.not(),
