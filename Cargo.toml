@@ -7,7 +7,7 @@ authors = [
     "daboross <daboross@daboross.net>",
     "Zac Burns (That3Percent) <that3percent@gmail.com>"
 ]
-description = "provides a `MaybeOwned<'a,T>` type different to std's `Cow` it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`"
+description = "provides a `MaybeOwned` (and `MaybeOwnedMut`) type similar to std's `Cow` but it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rustonaut/maybe-owned"
 readme = "./README.md"
