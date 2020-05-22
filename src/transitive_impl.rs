@@ -1,6 +1,6 @@
 use std::ops::*;
 
-use super::MaybeOwned;
+use super::{MaybeOwned, MaybeOwnedMut};
 
 macro_rules! impl_op {
     ($([$OP:ident : $op:ident, $OP_ASSIGN:ident : $op_assign: ident]),*) => ($(
@@ -21,6 +21,26 @@ macro_rules! impl_op {
             }
         }
 
+        // Note: With an additional macro level we could fold this with the
+        //       previous $OP implementation. But the additional read complexity
+        //       isn't really worth it.
+        impl<'min, L, R, OUT: 'min> $OP<MaybeOwnedMut<'min, R>> for MaybeOwnedMut<'min, L>
+            where L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>,
+                &'min L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>
+        {
+            type Output = OUT;
+
+            fn $op(self, rhs: MaybeOwnedMut<'min, R>) -> Self::Output {
+                use self::MaybeOwnedMut::*;
+                match (self, rhs) {
+                    (Owned(l), Owned(r)) => l.$op(r),
+                    (Owned(l), Borrowed(r)) => l.$op(&*r),
+                    (Borrowed(l), Owned(r)) => (&*l).$op(r),
+                    (Borrowed(l), Borrowed(r)) => (&*l).$op(&*r)
+                }
+            }
+        }
+
         impl<'min, L, R> $OP_ASSIGN<MaybeOwned<'min, R>> for MaybeOwned<'min, L>
             where L: Clone + $OP_ASSIGN<R> + $OP_ASSIGN<&'min R>
         {
@@ -30,6 +50,19 @@ macro_rules! impl_op {
                 match rhs {
                     Owned(r) => self.to_mut().$op_assign(r),
                     Borrowed(r) => self.to_mut().$op_assign(r)
+                }
+            }
+        }
+
+        impl<'min, L, R> $OP_ASSIGN<MaybeOwnedMut<'min, R>> for MaybeOwnedMut<'min, L>
+            where L: $OP_ASSIGN<R> + $OP_ASSIGN<&'min R>
+        {
+
+            fn $op_assign(&mut self, rhs: MaybeOwnedMut<'min, R>) {
+                use self::MaybeOwnedMut::*;
+                match rhs {
+                    Owned(r) => self.as_mut().$op_assign(r),
+                    Borrowed(r) => self.as_mut().$op_assign(&*r)
                 }
             }
         }
@@ -63,6 +96,21 @@ impl<'l, V, OUT> Neg for MaybeOwned<'l, V>
     }
 }
 
+impl<'l, V, OUT> Neg for MaybeOwnedMut<'l, V>
+    where V: Neg<Output=OUT>, &'l V: Neg<Output=OUT>
+{
+    type Output = OUT;
+
+    fn neg(self) -> Self::Output {
+        use self::MaybeOwnedMut::*;
+
+        match self {
+            Owned(s) => s.neg(),
+            Borrowed(s) => (&*s).neg()
+        }
+    }
+}
+
 impl<'l, V, OUT> Not for MaybeOwned<'l, V>
     where V: Not<Output=OUT>, &'l V: Not<Output=OUT>
 {
@@ -78,10 +126,27 @@ impl<'l, V, OUT> Not for MaybeOwned<'l, V>
     }
 }
 
+impl<'l, V, OUT> Not for MaybeOwnedMut<'l, V>
+    where V: Not<Output=OUT>, &'l V: Not<Output=OUT>
+{
+    type Output = V::Output;
+
+    fn not(self) -> Self::Output {
+        use self::MaybeOwnedMut::*;
+
+        match self {
+            Owned(s) => s.not(),
+            Borrowed(s) => (&*s).not()
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::ops::{Add, AddAssign, Not, Neg};
     use super::*;
+
+    //FIXME the test might need some cleanup.
 
     #[derive(Clone, PartialEq)]
     struct Think { x: u8 }
@@ -157,7 +222,6 @@ mod test {
         }
     }
 
-
     #[test]
     fn op_impls_exist() {
         let a = MaybeOwned::from(Think { x: 12 });
@@ -169,6 +233,19 @@ mod test {
         let c2: MaybeOwned<Think> = (&c).into();
 
         assert_eq!(c1 + c2, 84);
+    }
+
+    #[test]
+    fn op_impls_exist_for_mut() {
+        let a: MaybeOwnedMut<Think> = Think { x: 12 }.into();
+        let b: MaybeOwnedMut<Think> = Think { x: 13 }.into();
+        assert_eq!(a + b, 25u8);
+
+        let mut c0a = Think { x: 42 };
+        let mut c0b = Think { x: 8 };
+        let c1: MaybeOwnedMut<Think> = (&mut c0a).into();
+        let c2: MaybeOwnedMut<Think> = (&mut c0b).into();
+        assert_eq!(c1 + c2, 50);
     }
 
     #[test]
@@ -186,15 +263,47 @@ mod test {
     }
 
     #[test]
+    fn op_assign_impls_exist_mut() {
+        let mut a: MaybeOwnedMut<Think> = Think { x: 2 }.into();
+        a += MaybeOwnedMut::from(Think { x: 3 });
+        assert_eq!(a.x, 5);
+
+        let mut a = Think { x: 2 };
+        let mut a: MaybeOwnedMut<Think> = (&mut a).into();
+        assert!(!a.is_owned());
+        a += MaybeOwnedMut::from(Think { x: 5 });
+        assert!(!a.is_owned());
+        assert_eq!(a.as_ref().x, 7);
+    }
+
+    #[test]
+    fn not_and_neg_work_for_think_test_type()  {
+        assert_eq!(!Think { x: 0 }, false);
+        assert_eq!(!Think { x: 1 }, true);
+        assert_eq!(!&Think { x: 0 }, false);
+        assert_eq!(!&Think { x: 1 }, true);
+    }
+
+    #[test]
     fn not_and_neg_are_impl() {
         let a = Think { x: 5 };
-        let b = Think { x: 0 };
         let a1: MaybeOwned<Think> = (&a).into();
         let a2: MaybeOwned<Think> = (&a).into();
-
         assert_eq!(!a1, true);
-        assert_eq!(!b, false);
         assert_eq!(-a2, -5i8);
     }
 
+    #[test]
+    fn not_and_neg_are_impl_mut() {
+        let mut a = Think { x: 5 };
+        let mut b = Think { x: 0 };
+        let a1: MaybeOwnedMut<Think> = (&mut a).into();
+        let b1: MaybeOwnedMut<Think> = (&mut b).into();
+
+        assert_eq!(!a1, true);
+        assert_eq!(!b1, false);
+
+        let a2: MaybeOwnedMut<Think> = (&mut a).into();
+        assert_eq!(-a2, -5i8);
+    }
 }
