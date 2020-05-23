@@ -9,6 +9,7 @@ extern crate serde;
 #[cfg(feature = "serde")]
 mod serde_impls;
 
+#[cfg(feature = "unstable-transitive-ops-implementations")]
 mod transitive_impl;
 
 use std::borrow::{Borrow, BorrowMut, Cow};

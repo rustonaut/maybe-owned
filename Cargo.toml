@@ -16,6 +16,8 @@ keywords = [
     "maybe", "owned", "Cow"
 ]
 
+[features]
+unstable-transitive-ops-implementations = []
 
 [badges]
 travis-ci = { repository = "rustonaut/maybe-owned", branch = "0.3" }
