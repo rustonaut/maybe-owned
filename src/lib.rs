@@ -345,9 +345,9 @@ impl<'a, T: ToOwned<Owned = T>> From<Cow<'a, T>> for MaybeOwned<'a, T> {
     }
 }
 
-impl<'a, T: ToOwned<Owned = T>> Into<Cow<'a, T>> for MaybeOwned<'a, T> {
-    fn into(self) -> Cow<'a, T> {
-        match self {
+impl<'a, T: ToOwned<Owned=T>> From<MaybeOwned<'a, T>> for Cow<'a, T> {
+    fn from(container: MaybeOwned<'a, T>) -> Cow<'a, T> {
+        match container {
             MaybeOwned::Owned(v) => Cow::Owned(v),
             MaybeOwned::Borrowed(v) => Cow::Borrowed(v),
         }
