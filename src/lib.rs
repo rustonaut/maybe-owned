@@ -161,11 +161,33 @@ pub enum MaybeOwnedMut<'a, T: 'a> {
 macro_rules! common_impls {
     ($Name:ident) => {
         impl<T> $Name<'_, T> {
-            /// returns true if the data is owned else false
+            /// Returns true if the data is owned else false.
             pub fn is_owned(&self) -> bool {
                 match self {
                     Self::Owned(_) => true,
                     Self::Borrowed(_) => false,
+                }
+            }
+        }
+
+        impl<T: Clone> $Name<'_, T> {
+
+            /// Return the contained data in it's owned form.
+            ///
+            /// If it's borrowed this will clone it.
+            pub fn into_owned(self) -> T {
+                match self {
+                    Self::Owned(v) => v,
+                    Self::Borrowed(v) => v.clone(),
+                }
+            }
+
+            /// Internally converts the type into it's owned variant.
+            ///
+            /// Conversion from a reference to the owned variant is done by cloning.
+            pub fn make_owned(&mut self) {
+                if !self.is_owned() {
+                    *self = self.as_ref().clone().into()
                 }
             }
         }
@@ -252,18 +274,6 @@ macro_rules! common_impls {
                 }
             }
         }
-
-        impl<T: Clone> $Name<'_, T> {
-            /// Extracts the owned data.
-            ///
-            /// If the data is borrowed it is cloned before being extracted.
-            pub fn into_owned(self) -> T {
-                match self {
-                    Self::Owned(v) => v,
-                    Self::Borrowed(v) => v.clone(),
-                }
-            }
-        }
     };
 }
 
@@ -305,6 +315,19 @@ impl<T: Clone> Clone for MaybeOwned<'_, T> {
         match self {
             Self::Owned(v) => Self::Owned(v.clone()),
             Self::Borrowed(v) => Self::Borrowed(v),
+        }
+    }
+}
+
+impl<T> MaybeOwned<'_, T> {
+    /// Returns a `&mut` if possible.
+    ///
+    /// If the internal representation is borrowed (`&T`) then
+    /// this method will return `None`
+    pub fn as_mut(&mut self) -> Option<&mut T> {
+        match self {
+            MaybeOwned::Owned(value) => Some(value),
+            MaybeOwned::Borrowed(_) => None
         }
     }
 }
@@ -386,6 +409,15 @@ mod tests {
     fn is_owned() {
         let data = TestType::default();
         assert!(MaybeOwned::Owned(data).is_owned());
+    }
+
+    #[test]
+    fn make_owned() {
+        let mut a = MaybeOwned::Borrowed(&12u8);
+        assert!(!a.is_owned());
+        a.make_owned();
+        assert!(a.is_owned());
+        assert_eq!(&*a, &12);
     }
 
     #[test]
@@ -557,6 +589,14 @@ mod tests {
 
     #[test]
     fn has_as_mut() {
+        // uses a as_mut method
+        let mut v: MaybeOwned<u8> = (&11).into();
+        assert_eq!(v.as_mut(), None);
+
+        let mut v: MaybeOwned<u8> = 12.into();
+        assert_eq!(v.as_mut(), Some(&mut 12));
+
+        // uses AsMut
         let mut v = MaybeOwnedMut::Owned(42);
         let _ = AsMut::<u8>::borrow_mut(&mut v);
     }
