@@ -376,45 +376,6 @@ impl<T> MaybeOwned<'_, T> {
     }
 }
 
-impl<T: Clone> MaybeOwned<'_, T> {
-    /// Acquires a mutable reference to owned data.
-    ///
-    /// Clones data if it is not already owned.
-    ///
-    /// ## Example
-    ///
-    /// ```
-    /// use maybe_owned::MaybeOwned;
-    ///
-    /// #[derive(Clone, Debug, PartialEq, Eq)]
-    /// struct PseudoBigData(u8);
-    ///
-    /// let data = PseudoBigData(12);
-    ///
-    /// let mut maybe: MaybeOwned<PseudoBigData> = (&data).into();
-    /// assert_eq!(false, maybe.is_owned());
-    ///
-    /// {
-    ///     let reference = maybe.to_mut();
-    ///     assert_eq!(&mut PseudoBigData(12), reference);
-    /// }
-    /// assert!(maybe.is_owned());
-    /// ```
-    ///
-    #[deprecated = "use `make_owned` instead"]
-    pub fn to_mut(&mut self) -> &mut T {
-        match *self {
-            Self::Owned(ref mut v) => v,
-            Self::Borrowed(v) => {
-                *self = Self::Owned(v.clone());
-                match *self {
-                    Self::Owned(ref mut v) => v,
-                    Self::Borrowed(..) => unreachable!(),
-                }
-            }
-        }
-    }
-}
 
 impl<T> DerefMut for MaybeOwnedMut<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
@@ -489,18 +450,6 @@ mod tests {
         let data = TestType::default();
         let maybe: MaybeOwned<TestType> = (&data).into();
         assert!(!maybe.clone().is_owned());
-    }
-
-    #[test]
-    fn to_mut() {
-        let data = TestType::default();
-        let mut maybe: MaybeOwned<TestType> = (&data).into();
-        assert!(!maybe.is_owned());
-        {
-            #[allow(deprecated)]
-            let _mut_ref = maybe.to_mut();
-        }
-        assert!(maybe.is_owned());
     }
 
     #[test]
