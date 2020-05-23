@@ -6,7 +6,7 @@ use std::time::SystemTime;
 
 struct Data {
     text: String,
-    // this should be some think like
+    // this should be some Thing like
     // chrono::Date, but then it's just an examples
     time: SystemTime,
 }

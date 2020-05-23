@@ -159,50 +159,50 @@ mod test {
     //FIXME the test might need some cleanup.
 
     #[derive(Clone, PartialEq)]
-    struct Think {
+    struct Thing {
         x: u8,
     }
 
-    impl Add<Think> for Think {
+    impl Add<Thing> for Thing {
         type Output = u8;
 
-        fn add(self, rhs: Think) -> Self::Output {
+        fn add(self, rhs: Thing) -> Self::Output {
             self.x + rhs.x
         }
     }
-    impl AddAssign<Think> for Think {
-        fn add_assign(&mut self, rhs: Think) {
+    impl AddAssign<Thing> for Thing {
+        fn add_assign(&mut self, rhs: Thing) {
             self.x += rhs.x
         }
     }
-    impl<'a> Add<&'a Think> for Think {
+    impl<'a> Add<&'a Thing> for Thing {
         type Output = u8;
 
-        fn add(self, rhs: &'a Think) -> Self::Output {
+        fn add(self, rhs: &'a Thing) -> Self::Output {
             self.x + rhs.x
         }
     }
-    impl<'a> AddAssign<&'a Think> for Think {
-        fn add_assign(&mut self, rhs: &'a Think) {
+    impl<'a> AddAssign<&'a Thing> for Thing {
+        fn add_assign(&mut self, rhs: &'a Thing) {
             self.x += rhs.x
         }
     }
-    impl<'a> Add<Think> for &'a Think {
+    impl<'a> Add<Thing> for &'a Thing {
         type Output = u8;
 
-        fn add(self, rhs: Think) -> Self::Output {
+        fn add(self, rhs: Thing) -> Self::Output {
             self.x + rhs.x
         }
     }
-    impl<'a, 'b> Add<&'a Think> for &'b Think {
+    impl<'a, 'b> Add<&'a Thing> for &'b Thing {
         type Output = u8;
 
-        fn add(self, rhs: &'a Think) -> Self::Output {
+        fn add(self, rhs: &'a Thing) -> Self::Output {
             self.x + rhs.x
         }
     }
 
-    impl Not for Think {
+    impl Not for Thing {
         type Output = bool;
 
         fn not(self) -> Self::Output {
@@ -210,7 +210,7 @@ mod test {
         }
     }
 
-    impl<'a> Not for &'a Think {
+    impl<'a> Not for &'a Thing {
         type Output = bool;
 
         fn not(self) -> Self::Output {
@@ -218,7 +218,7 @@ mod test {
         }
     }
 
-    impl Neg for Think {
+    impl Neg for Thing {
         type Output = i8;
 
         fn neg(self) -> Self::Output {
@@ -226,7 +226,7 @@ mod test {
         }
     }
 
-    impl<'a> Neg for &'a Think {
+    impl<'a> Neg for &'a Thing {
         type Output = i8;
 
         fn neg(self) -> Self::Output {
@@ -236,86 +236,86 @@ mod test {
 
     #[test]
     fn op_impls_exist() {
-        let a = MaybeOwned::from(Think { x: 12 });
-        let b = MaybeOwned::from(Think { x: 13 });
+        let a = MaybeOwned::from(Thing { x: 12 });
+        let b = MaybeOwned::from(Thing { x: 13 });
         assert_eq!(a + b, MaybeOwned::Owned(25u8));
 
-        let c = Think { x: 42 };
-        let c1: MaybeOwned<Think> = (&c).into();
-        let c2: MaybeOwned<Think> = (&c).into();
+        let c = Thing { x: 42 };
+        let c1: MaybeOwned<Thing> = (&c).into();
+        let c2: MaybeOwned<Thing> = (&c).into();
 
         assert_eq!(c1 + c2, MaybeOwned::Owned(84));
     }
 
     #[test]
     fn op_impls_exist_for_mut() {
-        let a: MaybeOwnedMut<Think> = Think { x: 12 }.into();
-        let b: MaybeOwnedMut<Think> = Think { x: 13 }.into();
+        let a: MaybeOwnedMut<Thing> = Thing { x: 12 }.into();
+        let b: MaybeOwnedMut<Thing> = Thing { x: 13 }.into();
         assert_eq!(a + b, MaybeOwnedMut::Owned(25));
 
-        let mut c0a = Think { x: 42 };
-        let mut c0b = Think { x: 8 };
-        let c1: MaybeOwnedMut<Think> = (&mut c0a).into();
-        let c2: MaybeOwnedMut<Think> = (&mut c0b).into();
+        let mut c0a = Thing { x: 42 };
+        let mut c0b = Thing { x: 8 };
+        let c1: MaybeOwnedMut<Thing> = (&mut c0a).into();
+        let c2: MaybeOwnedMut<Thing> = (&mut c0b).into();
         assert_eq!(c1 + c2, MaybeOwnedMut::Owned(50));
     }
 
     #[test]
     fn op_assign_impls_exist() {
-        let mut a = MaybeOwned::from(Think { x: 2 });
-        a += MaybeOwned::from(Think { x: 3 });
+        let mut a = MaybeOwned::from(Thing { x: 2 });
+        a += MaybeOwned::from(Thing { x: 3 });
         assert_eq!(a.x, 5);
 
-        let a = Think { x: 2 };
-        let mut a: MaybeOwned<Think> = (&a).into();
+        let a = Thing { x: 2 };
+        let mut a: MaybeOwned<Thing> = (&a).into();
         assert!(!a.is_owned());
-        a += MaybeOwned::from(Think { x: 5 });
+        a += MaybeOwned::from(Thing { x: 5 });
         assert!(a.is_owned());
         assert_eq!(a.as_ref().x, 7);
     }
 
     #[test]
     fn op_assign_impls_exist_mut() {
-        let mut a: MaybeOwnedMut<Think> = Think { x: 2 }.into();
-        a += MaybeOwnedMut::from(Think { x: 3 });
+        let mut a: MaybeOwnedMut<Thing> = Thing { x: 2 }.into();
+        a += MaybeOwnedMut::from(Thing { x: 3 });
         assert_eq!(a.x, 5);
 
-        let mut a = Think { x: 2 };
-        let mut a: MaybeOwnedMut<Think> = (&mut a).into();
+        let mut a = Thing { x: 2 };
+        let mut a: MaybeOwnedMut<Thing> = (&mut a).into();
         assert!(!a.is_owned());
-        a += MaybeOwnedMut::from(Think { x: 5 });
+        a += MaybeOwnedMut::from(Thing { x: 5 });
         assert!(!a.is_owned());
         assert_eq!(a.as_ref().x, 7);
     }
 
     #[test]
-    fn not_and_neg_work_for_think_test_type() {
-        assert_eq!(!Think { x: 0 }, false);
-        assert_eq!(!Think { x: 1 }, true);
-        assert_eq!(!&Think { x: 0 }, false);
-        assert_eq!(!&Think { x: 1 }, true);
+    fn not_and_neg_work_for_thing_test_type() {
+        assert_eq!(!Thing { x: 0 }, false);
+        assert_eq!(!Thing { x: 1 }, true);
+        assert_eq!(!&Thing { x: 0 }, false);
+        assert_eq!(!&Thing { x: 1 }, true);
     }
 
     #[test]
     fn not_and_neg_are_impl() {
-        let a = Think { x: 5 };
-        let a1: MaybeOwned<Think> = (&a).into();
-        let a2: MaybeOwned<Think> = (&a).into();
+        let a = Thing { x: 5 };
+        let a1: MaybeOwned<Thing> = (&a).into();
+        let a2: MaybeOwned<Thing> = (&a).into();
         assert_eq!(!a1, true);
         assert_eq!(-a2, -5i8);
     }
 
     #[test]
     fn not_and_neg_are_impl_mut() {
-        let mut a = Think { x: 5 };
-        let mut b = Think { x: 0 };
-        let a1: MaybeOwnedMut<Think> = (&mut a).into();
-        let b1: MaybeOwnedMut<Think> = (&mut b).into();
+        let mut a = Thing { x: 5 };
+        let mut b = Thing { x: 0 };
+        let a1: MaybeOwnedMut<Thing> = (&mut a).into();
+        let b1: MaybeOwnedMut<Thing> = (&mut b).into();
 
         assert_eq!(!a1, true);
         assert_eq!(!b1, false);
 
-        let a2: MaybeOwnedMut<Think> = (&mut a).into();
+        let a2: MaybeOwnedMut<Thing> = (&mut a).into();
         assert_eq!(-a2, -5i8);
     }
 }
