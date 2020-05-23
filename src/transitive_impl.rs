@@ -8,16 +8,17 @@ macro_rules! impl_op {
             where L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>,
                 &'min L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>
         {
-            type Output = OUT;
+            type Output = MaybeOwned<'min, OUT>;
 
             fn $op(self, rhs: MaybeOwned<'min, R>) -> Self::Output {
                 use self::MaybeOwned::*;
-                match (self, rhs) {
+                let result = match (self, rhs) {
                     (Owned(l), Owned(r)) => l.$op(r),
                     (Owned(l), Borrowed(r)) => l.$op(r),
                     (Borrowed(l), Owned(r)) => l.$op(r),
                     (Borrowed(l), Borrowed(r)) => l.$op(r)
-                }
+                };
+                Owned(result)
             }
         }
 
@@ -28,16 +29,17 @@ macro_rules! impl_op {
             where L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>,
                 &'min L: $OP<R, Output=OUT> + $OP<&'min R, Output=OUT>
         {
-            type Output = OUT;
+            type Output = MaybeOwnedMut<'min, OUT>;
 
             fn $op(self, rhs: MaybeOwnedMut<'min, R>) -> Self::Output {
                 use self::MaybeOwnedMut::*;
-                match (self, rhs) {
+                let result = match (self, rhs) {
                     (Owned(l), Owned(r)) => l.$op(r),
                     (Owned(l), Borrowed(r)) => l.$op(&*r),
                     (Borrowed(l), Owned(r)) => (&*l).$op(r),
                     (Borrowed(l), Borrowed(r)) => (&*l).$op(&*r)
-                }
+                };
+                Owned(result)
             }
         }
 
@@ -236,26 +238,26 @@ mod test {
     fn op_impls_exist() {
         let a = MaybeOwned::from(Think { x: 12 });
         let b = MaybeOwned::from(Think { x: 13 });
-        assert_eq!(a + b, 25u8);
+        assert_eq!(a + b, MaybeOwned::Owned(25u8));
 
         let c = Think { x: 42 };
         let c1: MaybeOwned<Think> = (&c).into();
         let c2: MaybeOwned<Think> = (&c).into();
 
-        assert_eq!(c1 + c2, 84);
+        assert_eq!(c1 + c2, MaybeOwned::Owned(84));
     }
 
     #[test]
     fn op_impls_exist_for_mut() {
         let a: MaybeOwnedMut<Think> = Think { x: 12 }.into();
         let b: MaybeOwnedMut<Think> = Think { x: 13 }.into();
-        assert_eq!(a + b, 25u8);
+        assert_eq!(a + b, MaybeOwnedMut::Owned(25));
 
         let mut c0a = Think { x: 42 };
         let mut c0b = Think { x: 8 };
         let c1: MaybeOwnedMut<Think> = (&mut c0a).into();
         let c2: MaybeOwnedMut<Think> = (&mut c0b).into();
-        assert_eq!(c1 + c2, 50);
+        assert_eq!(c1 + c2, MaybeOwnedMut::Owned(50));
     }
 
     #[test]
