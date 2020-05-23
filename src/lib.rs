@@ -11,7 +11,7 @@ mod serde_impls;
 
 mod transitive_impl;
 
-use std::borrow::{Borrow, Cow};
+use std::borrow::{Borrow, BorrowMut, Cow};
 use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -366,6 +366,12 @@ impl<T> AsMut<T> for MaybeOwnedMut<'_, T> {
     }
 }
 
+impl<T> BorrowMut<T> for MaybeOwnedMut<'_, T> {
+    fn borrow_mut(&mut self) -> &mut T {
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -441,6 +447,21 @@ mod tests {
     }
 
     #[test]
+    fn has_deref() {
+        let a = MaybeOwned::Owned(vec![1u8]);
+        let _ = a.len();
+
+        let a = MaybeOwnedMut::Owned(vec![1u8]);
+        let _ = a.len();
+    }
+
+    #[test]
+    fn has_deref_mut() {
+        let mut a = MaybeOwnedMut::Owned(vec![1u8]);
+        a[0] = 12u8;
+    }
+
+    #[test]
     fn has_partial_eq() {
         #[derive(PartialEq)]
         struct TestType(f32);
@@ -508,6 +529,36 @@ mod tests {
         map.insert(MaybeOwned::Owned(42), 33);
 
         assert_eq!(map.get(&MaybeOwned::Borrowed(&42)), Some(&33));
+    }
+
+    #[test]
+    fn has_borrow() {
+        let v = MaybeOwned::Owned(42);
+        let _ = Borrow::<u8>::borrow(&v);
+
+        let v = MaybeOwnedMut::Owned(42);
+        let _ = Borrow::<u8>::borrow(&v);
+    }
+
+    #[test]
+    fn has_borrow_mut() {
+        let mut v = MaybeOwnedMut::Owned(42);
+        let _ = BorrowMut::<u8>::borrow_mut(&mut v);
+    }
+
+    #[test]
+    fn has_as_ref() {
+        let v = MaybeOwned::Owned(42);
+        let _ = AsRef::<u8>::borrow(&v);
+
+        let v = MaybeOwnedMut::Owned(42);
+        let _ = AsRef::<u8>::borrow(&v);
+    }
+
+    #[test]
+    fn has_as_mut() {
+        let mut v = MaybeOwnedMut::Owned(42);
+        let _ = AsMut::<u8>::borrow_mut(&mut v);
     }
 
     #[test]
