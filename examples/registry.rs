@@ -8,34 +8,35 @@ struct Data {
     text: String,
     // this should be some think like
     // chrono::Date, but then it's just an examples
-    time: SystemTime
+    time: SystemTime,
 }
 
 impl Data {
     fn new<T>(text: T) -> Data
-        where T: Into<String>
+    where
+        T: Into<String>,
     {
         Data {
             text: text.into(),
-            time: SystemTime::now()
+            time: SystemTime::now(),
         }
     }
 }
 
 #[derive(Default)]
 struct Regestry<'a> {
-    registry: HashMap<String, MaybeOwned<'a, Data>>
+    registry: HashMap<String, MaybeOwned<'a, Data>>,
 }
 
 impl<'a> Regestry<'a> {
-
     fn new() -> Regestry<'a> {
         Default::default()
     }
 
-    fn register_data<K,D>(&mut self, key: K, data: D)
-        -> Option<MaybeOwned<'a, Data>>
-        where K: Into<String>, D: Into<MaybeOwned<'a, Data>>
+    fn register_data<K, D>(&mut self, key: K, data: D) -> Option<MaybeOwned<'a, Data>>
+    where
+        K: Into<String>,
+        D: Into<MaybeOwned<'a, Data>>,
     {
         self.registry.insert(key.into(), data.into())
     }
@@ -47,13 +48,16 @@ impl<'a> Regestry<'a> {
                 //we can just deref MaybeOwned
                 key,
                 val.text,
-                if val.is_owned() { "[owned]" } else { "[borrowed]" },
+                if val.is_owned() {
+                    "[owned]"
+                } else {
+                    "[borrowed]"
+                },
                 val.time
             )
         }
     }
 }
-
 
 fn main() {
     let shared_data = Data::new("--missing--");

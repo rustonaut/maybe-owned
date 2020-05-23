@@ -82,7 +82,9 @@ impl_op! {
 }
 
 impl<'l, V, OUT> Neg for MaybeOwned<'l, V>
-    where V: Neg<Output=OUT>, &'l V: Neg<Output=OUT>
+where
+    V: Neg<Output = OUT>,
+    &'l V: Neg<Output = OUT>,
 {
     type Output = OUT;
 
@@ -91,13 +93,15 @@ impl<'l, V, OUT> Neg for MaybeOwned<'l, V>
 
         match self {
             Owned(s) => s.neg(),
-            Borrowed(s) => s.neg()
+            Borrowed(s) => s.neg(),
         }
     }
 }
 
 impl<'l, V, OUT> Neg for MaybeOwnedMut<'l, V>
-    where V: Neg<Output=OUT>, &'l V: Neg<Output=OUT>
+where
+    V: Neg<Output = OUT>,
+    &'l V: Neg<Output = OUT>,
 {
     type Output = OUT;
 
@@ -106,13 +110,15 @@ impl<'l, V, OUT> Neg for MaybeOwnedMut<'l, V>
 
         match self {
             Owned(s) => s.neg(),
-            Borrowed(s) => (&*s).neg()
+            Borrowed(s) => (&*s).neg(),
         }
     }
 }
 
 impl<'l, V, OUT> Not for MaybeOwned<'l, V>
-    where V: Not<Output=OUT>, &'l V: Not<Output=OUT>
+where
+    V: Not<Output = OUT>,
+    &'l V: Not<Output = OUT>,
 {
     type Output = V::Output;
 
@@ -121,13 +127,15 @@ impl<'l, V, OUT> Not for MaybeOwned<'l, V>
 
         match self {
             Owned(s) => s.not(),
-            Borrowed(s) => s.not()
+            Borrowed(s) => s.not(),
         }
     }
 }
 
 impl<'l, V, OUT> Not for MaybeOwnedMut<'l, V>
-    where V: Not<Output=OUT>, &'l V: Not<Output=OUT>
+where
+    V: Not<Output = OUT>,
+    &'l V: Not<Output = OUT>,
 {
     type Output = V::Output;
 
@@ -136,20 +144,22 @@ impl<'l, V, OUT> Not for MaybeOwnedMut<'l, V>
 
         match self {
             Owned(s) => s.not(),
-            Borrowed(s) => (&*s).not()
+            Borrowed(s) => (&*s).not(),
         }
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::ops::{Add, AddAssign, Not, Neg};
     use super::*;
+    use std::ops::{Add, AddAssign, Neg, Not};
 
     //FIXME the test might need some cleanup.
 
     #[derive(Clone, PartialEq)]
-    struct Think { x: u8 }
+    struct Think {
+        x: u8,
+    }
 
     impl Add<Think> for Think {
         type Output = u8;
@@ -277,7 +287,7 @@ mod test {
     }
 
     #[test]
-    fn not_and_neg_work_for_think_test_type()  {
+    fn not_and_neg_work_for_think_test_type() {
         assert_eq!(!Think { x: 0 }, false);
         assert_eq!(!Think { x: 1 }, true);
         assert_eq!(!&Think { x: 0 }, false);
