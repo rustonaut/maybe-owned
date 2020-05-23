@@ -48,8 +48,8 @@ macro_rules! impl_op {
             fn $op_assign(&mut self, rhs: MaybeOwned<'min, R>) {
                 use self::MaybeOwned::*;
                 match rhs {
-                    Owned(r) => self.to_mut().$op_assign(r),
-                    Borrowed(r) => self.to_mut().$op_assign(r)
+                    Owned(r) => self.make_owned().$op_assign(r),
+                    Borrowed(r) => self.make_owned().$op_assign(r)
                 }
             }
         }

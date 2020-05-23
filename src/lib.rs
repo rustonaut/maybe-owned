@@ -150,6 +150,17 @@ pub enum MaybeOwned<'a, T: 'a> {
 
 /// This type is basically the same as `MaybeOwned`,
 /// but works with mutable references.
+///
+/// Note that while you can se `MaybeOwned` as a alternative
+/// implementation for a Cow (Copy-On-Write) type this isn't
+/// really the case for `MaybeOwnedMut` as changing it will
+/// potentially change the source through the given `&mut`
+/// reference. For example the transitive add assign (+=)
+/// implementation for `MaybeOwned` does (need to) convert
+/// the given instance into a owned variant before using
+/// `+=` on the contained type. But for `MaybeOwnedMut` it
+/// can directly use `+=` on the `&mut` contained in the
+/// `Borrowed` variant!
 #[derive(Debug)]
 pub enum MaybeOwnedMut<'a, T: 'a> {
     /// owns T
@@ -185,9 +196,42 @@ macro_rules! common_impls {
             /// Internally converts the type into it's owned variant.
             ///
             /// Conversion from a reference to the owned variant is done by cloning.
-            pub fn make_owned(&mut self) {
-                if !self.is_owned() {
-                    *self = self.as_ref().clone().into()
+            ///
+            /// *This returns a `&mut T` and as such can be used to "unconditionally"
+            ///  get an `&mut T`*. Be aware that while this works with both `MaybeOwned`
+            ///  and `MaybeOwnedMut` it also converts it to an owned variant in both
+            ///  cases. So while it's the best way to get a `&mut T` for `MaybeOwned`
+            ///  for `MaybeOwnedMut` it's preferable to use `as_mut` from `AsMut`.
+            ///
+            /// ## Example
+            ///
+            /// ```
+            /// use maybe_owned::MaybeOwned;
+            ///
+            /// #[derive(Clone, Debug, PartialEq, Eq)]
+            /// struct PseudoBigData(u8);
+            ///
+            /// let data = PseudoBigData(12);
+            ///
+            /// let mut maybe: MaybeOwned<PseudoBigData> = (&data).into();
+            /// assert_eq!(false, maybe.is_owned());
+            ///
+            /// {
+            ///     let reference = maybe.make_owned();
+            ///     assert_eq!(&mut PseudoBigData(12), reference);
+            /// }
+            /// assert!(maybe.is_owned());
+            /// ```
+            pub fn make_owned(&mut self) -> &mut T {
+                match self {
+                    Self::Owned(v) => v,
+                    Self::Borrowed(v) => {
+                        *self = Self::Owned(v.clone());
+                        match self {
+                            Self::Owned(v) => v,
+                            Self::Borrowed(..) => unreachable!(),
+                        }
+                    }
                 }
             }
         }
@@ -357,6 +401,7 @@ impl<T: Clone> MaybeOwned<'_, T> {
     /// assert!(maybe.is_owned());
     /// ```
     ///
+    #[deprecated = "use `make_owned` instead"]
     pub fn to_mut(&mut self) -> &mut T {
         match *self {
             Self::Owned(ref mut v) => v,
@@ -452,6 +497,7 @@ mod tests {
         let mut maybe: MaybeOwned<TestType> = (&data).into();
         assert!(!maybe.is_owned());
         {
+            #[allow(deprecated)]
             let _mut_ref = maybe.to_mut();
         }
         assert!(maybe.is_owned());
