@@ -64,6 +64,16 @@ additional terms or conditions.
 
 ## Change Log
 
+- `v0.3.4`:
+  - Added `make_owned()` as a `to_mut()` replacement,
+    but also available for `MaybeOwnedMut` and more
+    clear in it's functionality.
+  - Added a `as_mut()` method to `MaybeOwned` which
+    return a `Option<&mut T>`
+  - Added missing BorrowMut implementation
+    for `MaybeOwnedMut`
+
+
 - `v0.3.3`:
   - added MaybeOwnedMut
 

@@ -1,6 +1,6 @@
 [package]
 name = "maybe-owned"
-version = "0.3.3"
+version = "0.3.4"
 authors = [
 	"Philipp korber <philippkorber@gmail.com>",
 	"darkstalker <slayerbeast@gmail.com>",
