@@ -288,10 +288,9 @@ macro_rules! common_impls {
             }
         }
 
-        // TODO: Specify RHS
-        impl<T: PartialOrd> PartialOrd for $Name<'_, T> {
+        impl<'b, A: PartialOrd<B>, B> PartialOrd<$Name<'b, B>> for $Name<'_, A> {
             #[inline]
-            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+            fn partial_cmp(&self, other: &$Name<'b, B>) -> Option<Ordering> {
                 PartialOrd::partial_cmp(self.deref(), other.deref())
             }
         }
