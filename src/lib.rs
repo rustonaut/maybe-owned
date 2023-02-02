@@ -182,7 +182,7 @@ macro_rules! common_impls {
             }
 
             /// Returns a new `MaybeOwned::Borrowed` without cloning the data.
-            pub fn clone_ref<'a>(&'a self) -> MaybeOwned<'a, T> {
+            pub fn clone_ref(&self) -> MaybeOwned<'_, T> {
                 match self {
                     Self::Owned(v) => MaybeOwned::Borrowed(v),
                     Self::Borrowed(v) => MaybeOwned::Borrowed(v),
@@ -411,7 +411,7 @@ impl<T> BorrowMut<T> for MaybeOwnedMut<'_, T> {
 
 impl<T> MaybeOwnedMut<'_, T> {
     /// Returns a new `MaybeOwnedMut::Borrowed` without cloning the data.
-    pub fn clone_mut<'a>(&'a mut self) -> MaybeOwnedMut<'a, T> {
+    pub fn clone_mut(&mut self) -> MaybeOwnedMut<'_, T> {
         match self {
             Self::Owned(v) => MaybeOwnedMut::Borrowed(v),
             Self::Borrowed(v) => MaybeOwnedMut::Borrowed(v),
