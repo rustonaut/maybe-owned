@@ -90,6 +90,7 @@ where
 {
     type Output = OUT;
 
+    //TODO this should return a MaybeOwned
     fn neg(self) -> Self::Output {
         use self::MaybeOwned::*;
 
@@ -107,6 +108,7 @@ where
 {
     type Output = OUT;
 
+    //TODO this should return a MaybeOwned
     fn neg(self) -> Self::Output {
         use self::MaybeOwnedMut::*;
 
@@ -124,6 +126,7 @@ where
 {
     type Output = V::Output;
 
+    //TODO this should return a MaybeOwned
     fn not(self) -> Self::Output {
         use self::MaybeOwned::*;
 
@@ -141,6 +144,7 @@ where
 {
     type Output = V::Output;
 
+    //TODO this should return a MaybeOwned
     fn not(self) -> Self::Output {
         use self::MaybeOwnedMut::*;
 
