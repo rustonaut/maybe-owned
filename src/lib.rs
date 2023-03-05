@@ -191,7 +191,6 @@ macro_rules! common_impls {
         }
 
         impl<T: Clone> $Name<'_, T> {
-
             /// Return the contained data in it's owned form.
             ///
             /// If it's borrowed this will clone it.
@@ -353,7 +352,7 @@ impl<'a, T: ToOwned<Owned = T>> From<Cow<'a, T>> for MaybeOwned<'a, T> {
     }
 }
 
-impl<'a, T: ToOwned<Owned=T>> From<MaybeOwned<'a, T>> for Cow<'a, T> {
+impl<'a, T: ToOwned<Owned = T>> From<MaybeOwned<'a, T>> for Cow<'a, T> {
     fn from(container: MaybeOwned<'a, T>) -> Cow<'a, T> {
         match container {
             MaybeOwned::Owned(v) => Cow::Owned(v),
@@ -379,11 +378,10 @@ impl<T> MaybeOwned<'_, T> {
     pub fn as_mut(&mut self) -> Option<&mut T> {
         match self {
             MaybeOwned::Owned(value) => Some(value),
-            MaybeOwned::Borrowed(_) => None
+            MaybeOwned::Borrowed(_) => None,
         }
     }
 }
-
 
 impl<T> DerefMut for MaybeOwnedMut<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
