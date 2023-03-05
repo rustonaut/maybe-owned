@@ -2,10 +2,7 @@
 name = "maybe-owned"
 version = "0.4.0"
 authors = [
-	"Philipp korber <philippkorber@gmail.com>",
-	"darkstalker <slayerbeast@gmail.com>",
-    "daboross <daboross@daboross.net>",
-    "Zac Burns (That3Percent) <that3percent@gmail.com>"
+	"Philipp Korber <philipp@korber.dev>",
 ]
 description = "provides a `MaybeOwned` (and `MaybeOwnedMut`) type similar to std's `Cow` but it implements `From<T>` and `From<&'a T>` and does not require `ToOwned`"
 license = "MIT OR Apache-2.0"
