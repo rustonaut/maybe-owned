@@ -20,7 +20,6 @@ keywords = [
 unstable-transitive-ops-implementations = []
 
 [badges]
-travis-ci = { repository = "rustonaut/maybe-owned", branch = "0.3" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
