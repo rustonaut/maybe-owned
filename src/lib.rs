@@ -182,7 +182,7 @@ macro_rules! common_impls {
             }
 
             /// Returns a new `MaybeOwned::Borrowed` without cloning the data.
-            pub fn clone_ref(&self) -> MaybeOwned<'_, T> {
+            pub fn to_ref(&self) -> MaybeOwned<'_, T> {
                 match self {
                     Self::Owned(v) => MaybeOwned::Borrowed(v),
                     Self::Borrowed(v) => MaybeOwned::Borrowed(v),
@@ -411,7 +411,7 @@ impl<T> BorrowMut<T> for MaybeOwnedMut<'_, T> {
 
 impl<T> MaybeOwnedMut<'_, T> {
     /// Returns a new `MaybeOwnedMut::Borrowed` without cloning the data.
-    pub fn clone_mut(&mut self) -> MaybeOwnedMut<'_, T> {
+    pub fn to_mut(&mut self) -> MaybeOwnedMut<'_, T> {
         match self {
             Self::Owned(v) => MaybeOwnedMut::Borrowed(v),
             Self::Borrowed(v) => MaybeOwnedMut::Borrowed(v),
@@ -593,11 +593,11 @@ mod tests {
 
     #[test]
     fn has_as_ref() {
-        let v = MaybeOwned::Owned(42);
-        let _ = AsRef::<u8>::borrow(&v);
+        let v: MaybeOwned<u8> = 42.into();
+        let _: &u8 = v.as_ref();
 
-        let v = MaybeOwnedMut::Owned(42);
-        let _ = AsRef::<u8>::borrow(&v);
+        let v: MaybeOwnedMut<u8> = 42.into();
+        let _: &u8 = v.as_ref();
     }
 
     #[test]
@@ -611,7 +611,7 @@ mod tests {
 
         // uses AsMut
         let mut v = MaybeOwnedMut::Owned(42);
-        let _ = AsMut::<u8>::borrow_mut(&mut v);
+        let _: &mut u8 = v.as_mut();
     }
 
     #[test]
@@ -687,44 +687,36 @@ mod tests {
     }
 
     #[test]
-    fn clone_ref_borrowed() {
+    fn to_ref_borrowed() {
         let data = TestType::default();
         let maybe_owned = MaybeOwned::Borrowed(&data);
-        let cloned = maybe_owned.clone_ref();
-        assert_eq!(maybe_owned, cloned);
-        assert!(!cloned.is_owned());
-        // Cloned reference should not outlive the original.
-        drop(maybe_owned);
+        let referenced = maybe_owned.to_ref();
+        assert_eq!(maybe_owned, referenced);
+        assert!(!referenced.is_owned());
     }
 
     #[test]
-    fn clone_ref_owned() {
+    fn to_ref_owned() {
         let maybe_owned = MaybeOwned::Owned(TestType::default());
-        let cloned = maybe_owned.clone_ref();
-        assert_eq!(maybe_owned, cloned);
-        assert!(!cloned.is_owned());
-        // Cloned reference should not outlive the original.
-        drop(maybe_owned);
+        let referenced = maybe_owned.to_ref();
+        assert_eq!(maybe_owned, referenced);
+        assert!(!referenced.is_owned());
     }
 
     #[test]
     fn clone_mut_borrowed() {
         let mut data = TestType::default();
         let mut maybe_owned = MaybeOwnedMut::Borrowed(&mut data);
-        let mut cloned = maybe_owned.clone_mut();
-        assert_eq!(cloned.deref_mut(), &mut TestType::default());
-        assert!(!cloned.is_owned());
-        // Cloned reference should not outlive the original.
-        drop(maybe_owned);
+        let mut referenced = maybe_owned.to_mut();
+        assert_eq!(referenced.deref_mut(), &mut TestType::default());
+        assert!(!referenced.is_owned());
     }
 
     #[test]
     fn clone_mut_owned() {
         let mut maybe_owned = MaybeOwnedMut::Owned(TestType::default());
-        let mut cloned = maybe_owned.clone_mut();
+        let mut cloned = maybe_owned.to_mut();
         assert_eq!(cloned.deref_mut(), &mut TestType::default());
         assert!(!cloned.is_owned());
-        // Cloned reference should not outlive the original.
-        drop(maybe_owned);
     }
 }
